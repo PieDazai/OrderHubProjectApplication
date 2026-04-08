@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:17.6
+    container_name: postgres_orderHub
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: $POSTGRES_DB
+
+    restart: unless-stopped
+
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=100"
+
+volumes:
+  postgres_data:

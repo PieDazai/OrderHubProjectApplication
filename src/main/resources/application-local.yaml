@@ -2,13 +2,10 @@ spring:
   application:
     name: OrderHubProjectApplication
 
-  profiles:
-    active: local
-
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:order_hub_db}
-    username: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    url: jdbc:postgresql://localhost:5435/order_hub_db
+    username: postgres_user
+    password: postgres_password
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -18,8 +15,8 @@ spring:
 
   liquibase:
     enabled: true
-    user: ${POSTGRES_USER}
-    password: ${POSTGRES_PASSWORD}
+    user: postgres_user
+    password: postgres_password
     change-log: classpath:/db/changelog/changelog_master.yaml
 
 server:
