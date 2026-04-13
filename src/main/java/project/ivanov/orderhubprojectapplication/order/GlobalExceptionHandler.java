@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import project.ivanov.orderhubprojectapplication.order.exception.NotFoundOrderException;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDto> globalExceptionHandler(MethodArgumentNotValidException ex) {
 
-        List<String> errors = ex.   getBindingResult()
+        List<String> errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(e -> e.getField() + ":" + e.getDefaultMessage())
@@ -26,4 +27,15 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.badRequest().body(error);
     }
+    @ExceptionHandler(NotFoundOrderException.class)
+    public ResponseEntity<ErrorDto> globalExceptionHandler(NotFoundOrderException ex) {
+
+        var error =  new ErrorDto(
+                404,
+                "Order not found",
+                ex.getMessage()
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
 }

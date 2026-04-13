@@ -4,10 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
@@ -26,5 +23,12 @@ public class OrderController {
         var response = OrderResponse.from(order);
         return ResponseEntity.created(URI.create("/orders/" + order.getId()))
                 .body(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> getOrder(@PathVariable Long id){
+        var found = orderService.findById(id);
+        var response = OrderResponse.from(found);
+        return ResponseEntity.ok(response);
     }
 }

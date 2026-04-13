@@ -4,16 +4,18 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Setter
 @Getter
 @Entity
 @Table(name = "orders")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,10 +37,13 @@ public class Order {
         this.createAt = Instant.now();
         this.status = OrderStatus.CREATED;
         this.orderNumber = UUID.randomUUID().toString();
+
+        if(items != null) {
+            items.forEach(item -> item.setOrder(this));
+        }
     }
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "order_id")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
 }
