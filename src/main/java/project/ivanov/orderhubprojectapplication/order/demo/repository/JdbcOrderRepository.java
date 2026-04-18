@@ -25,7 +25,7 @@ public class JdbcOrderRepository {
     private final JdbcTemplate jdbcTemplate;
 
     private static final String SAVE_ORDER = """
-            INSET INTO orders (status, create_at, order_number)
+            INSERT INTO orders (status, create_at, order_number)
             VALUES (?, ?, ?)
             """;
 

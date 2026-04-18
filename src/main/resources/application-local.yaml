@@ -24,4 +24,4 @@ server:
 
 logging:
   level:
-    org.hibernate.sql: DEBUG
+    org.hibernate.sql: info

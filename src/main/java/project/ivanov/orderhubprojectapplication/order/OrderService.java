@@ -1,6 +1,7 @@
 package project.ivanov.orderhubprojectapplication.order;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.ivanov.orderhubprojectapplication.order.exception.NotFoundOrderException;
@@ -11,10 +12,12 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
 
     public Order createOrder(CreateOrderRequest request) {
+        log.info("Request to Create Order : {}", request);
         List<OrderItem> items = request.items().stream()
                 .map(item -> new OrderItem(
                         item.productId(),
@@ -25,12 +28,17 @@ public class OrderService {
 
         Order order = new Order(items);
 
+        log.info("Successful to Create Order : {}", order);
         return orderRepository.save(order);
     }
 
     @Transactional(readOnly = true)
     public Order findById(Long id){
-        return orderRepository.findWithItemById(id).orElseThrow(
+        log.info("Request to try to get Order with id : {}", id);
+        var order = orderRepository.findWithItemById(id).orElseThrow(
                 () -> new NotFoundOrderException("Order with id " + id + " not found"));
+
+        log.info("Successful to find Order with id: {}", order);
+        return order;
     }
 }
