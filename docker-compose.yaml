@@ -35,7 +35,7 @@ services:
   order-service:
     build:
       context: .       # Текущая директория
-      dockerfile: Dockerfile         # Используем наш multi-stage Dockerfile
+      dockerfile: order-service/Dockerfile        # Используем наш multi-stage Dockerfile
       args:
         # Аргументы сборки (только метаинформация, НЕ секреты!)
         APP_VERSION: ${APP_VERSION:-1.0.0}  # Версия приложения для меток в образе
@@ -103,13 +103,56 @@ services:
     networks:
       - orderhub-network
 
+  notification-service:
+    build:
+      context: .       # Текущая директория
+      dockerfile: notification-service/Dockerfile        # Используем наш multi-stage Dockerfile
+      args:
+        # Аргументы сборки (только метаинформация, НЕ секреты!)
+        APP_VERSION: ${APP_VERSION:-1.0.0}  # Версия приложения для меток в образе
+        # ВНИМАНИЕ: Пароли НЕ передаём в ARGS! Они останутся в образе.
+    container_name: notification-service
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT:-8082}:8082"           # Проброс порта наружу
+    environment:
+      # Сервер
+      SERVER_PORT: 8082
+
+      # -----------------------------------------------------------------------
+      # Метрики и мониторинг (для Prometheus)
+      # -----------------------------------------------------------------------
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"  # Включаем экспорт в Prometheus
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus,metrics,loggers
+
+      # -----------------------------------------------------------------------
+      # Логирование (опционально, для отладки)
+      # -----------------------------------------------------------------------
+      LOGGING_LEVEL_COM_ORDERHUB: DEBUG  # Детальные логи
+
+      # Трассировка OpenTelemetry
+      MANAGEMENT_TRACING_ENABLED: "true"
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+
+    depends_on:
+      postgres:
+        condition: service_healthy  # Ждём, пока PostgreSQL полностью готов
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - orderhub-network
 
   prometheus:
     image: prom/prometheus:v2.47.0
     container_name: prometheus_orderhub
     volumes:
       # Конфигурация Prometheus (скажем, куда ходить за метриками)
-      - ./src/main/resources/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./order-service/src/main/resources/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       # Данные метрик (чтобы не терять историю при перезапуске)
       - prometheus_data:/prometheus
     command:
@@ -125,6 +168,7 @@ services:
     # ---------------------------------------------------------------------------
     # Grafana - визуализация дашбордов
     # ---------------------------------------------------------------------------
+
   grafana:
     image: grafana/grafana:10.2.2
     container_name: grafana_orderhub
@@ -144,10 +188,30 @@ services:
     networks:
       - orderhub-network
 
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: jaeger
+    ports:
+      - "16686:16686"  # UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+      # Храним трассы в памяти (для демо), в production нужен persistent storage
+      SPAN_STORAGE_TYPE: memory
+    restart: unless-stopped
+    networks:
+      - orderhub-network
+
 volumes:
   postgres_data:
+    name: orderhub_postgres_data
   prometheus_data:
+    name: orderhub_prometheus_data
   grafana_data:
+    name: orderhub_grafana_data
+  jaeger_data:
+    name: orderhub_jaeger_data
 
 networks:
   orderhub-network:

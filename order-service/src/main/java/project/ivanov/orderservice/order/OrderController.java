@@ -3,7 +3,7 @@ package project.ivanov.orderservice.order;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import project.ivanov.orderhubprojectapplication.order.OrderResponse;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 

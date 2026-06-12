@@ -7,6 +7,11 @@
           <package value="project.ivanov.orderhubprojectapplication" />
         </packages>
       </persistence-unit>
+      <persistence-unit moduleName="order-service" name="Default">
+        <packages>
+          <package value="project.ivanov.orderservice" />
+        </packages>
+      </persistence-unit>
     </persistence-units>
   </component>
 </project>

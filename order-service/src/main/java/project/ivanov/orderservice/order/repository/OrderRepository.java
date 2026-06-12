@@ -2,7 +2,7 @@ package project.ivanov.orderservice.order.repository;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import project.ivanov.orderhubprojectapplication.order.Order;
+import project.ivanov.orderservice.order.domain.Order;
 
 import java.util.Optional;
 

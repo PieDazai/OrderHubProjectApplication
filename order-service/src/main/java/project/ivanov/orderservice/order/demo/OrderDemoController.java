@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import project.ivanov.orderhubprojectapplication.order.CreateOrderRequest;
-import project.ivanov.orderhubprojectapplication.order.OrderResponse;
+import project.ivanov.orderservice.order.CreateOrderRequest;
+import project.ivanov.orderservice.order.OrderResponse;
 
 @RestController
 @RequiredArgsConstructor

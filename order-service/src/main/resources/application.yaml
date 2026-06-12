@@ -1,9 +1,9 @@
 spring:
   application:
-    name: OrderHubProjectApplication
+    name: order-service
 
   profiles:
-    active: local
+    active: default
 
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:order_hub_db}
@@ -28,12 +28,27 @@ spring:
     enabled: true
     user: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
-    change-log: classpath:/db/changelog/changelog_master.yaml
+    change-log: classpath:/changelog/changelog_master.yaml
 
 server:
   port: 8080
 
 management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces
+
+
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        descriptions: true
+
   metrics:
     distribution:
       percentiles-histogram:
@@ -63,6 +78,9 @@ management:
 
 info:
   app:
-    name: "OrderHub"
+    name: "order-service"
     version: "0.0.1"
     description: "Learning..."
+
+url:
+  notification-service: ${NOTIFICATION_SERVICE_URL}

@@ -1,5 +1,8 @@
 package project.ivanov.orderservice.order;
 
+import project.ivanov.orderservice.order.domain.Order;
+import project.ivanov.orderservice.order.domain.OrderItem;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

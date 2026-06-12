@@ -3,10 +3,10 @@ package project.ivanov.orderservice.order.demo;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import project.ivanov.orderhubprojectapplication.order.CreateOrderRequest;
-import project.ivanov.orderhubprojectapplication.order.Order;
-import project.ivanov.orderhubprojectapplication.order.OrderItem;
-import project.ivanov.orderhubprojectapplication.order.repository.OrderRepository;
+import project.ivanov.orderservice.order.CreateOrderRequest;
+import project.ivanov.orderservice.order.domain.Order;
+import project.ivanov.orderservice.order.domain.OrderItem;
+import project.ivanov.orderservice.order.repository.OrderRepository;
 
 import java.util.List;
 

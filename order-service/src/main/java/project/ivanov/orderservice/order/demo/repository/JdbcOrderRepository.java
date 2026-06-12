@@ -7,9 +7,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import project.ivanov.orderhubprojectapplication.order.Order;
-import project.ivanov.orderhubprojectapplication.order.OrderItem;
-import project.ivanov.orderhubprojectapplication.order.OrderStatus;
+import project.ivanov.orderservice.order.domain.Order;
+import project.ivanov.orderservice.order.domain.OrderItem;
+import project.ivanov.orderservice.order.OrderStatus;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;

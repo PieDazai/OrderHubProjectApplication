@@ -1,7 +1,6 @@
-package project.ivanov.orderhubprojectapplication.order;
+package project.ivanov.orderservice.order.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

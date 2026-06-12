@@ -4,8 +4,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import project.ivanov.orderhubprojectapplication.order.ErrorDto;
-import project.ivanov.orderhubprojectapplication.order.exception.NotFoundOrderException;
+import project.ivanov.orderservice.order.domain.ErrorDto;
+import project.ivanov.orderservice.order.exception.NotFoundOrderException;
 
 import java.util.List;
 

@@ -1,10 +1,10 @@
-package project.ivanov.orderservice.order;
+package project.ivanov.orderservice.order.domain;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import project.ivanov.orderhubprojectapplication.order.OrderItem;
-import project.ivanov.orderhubprojectapplication.order.OrderStatus;
+import project.ivanov.orderservice.order.OrderStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
