@@ -21,7 +21,7 @@ public class NotificationListener {
         log.info("get event : {}", event);
 
         try{
-            notificationClient.notifyOrderCreate(event.orderId());
+            notificationClient.notifyOrderCreate(event);
             log.info("event was send, id : {}", event.orderId());
         } catch (Exception ex){
             log.error("failed to send event : {}", event, ex);

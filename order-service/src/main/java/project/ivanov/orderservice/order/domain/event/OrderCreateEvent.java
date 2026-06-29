@@ -1,12 +1,21 @@
 package project.ivanov.orderservice.order.domain.event;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 public record OrderCreateEvent(
         Long orderId,
+        Map<String, String> context,
         LocalDateTime timestamp
 ) {
-    public static OrderCreateEvent of(Long orderId){
-        return new OrderCreateEvent(orderId, LocalDateTime.now());
+    public static OrderCreateEvent of(
+            Long orderId,
+            Map<String, String> context
+    ){
+        return new OrderCreateEvent(
+                orderId,
+                context,
+                LocalDateTime.now()
+        );
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Random;
+
 @RestController
 @RequestMapping("/api/notifications")
 @Slf4j
@@ -21,7 +23,19 @@ public class NotificationController {
 
         log.info("Received request for notification: {}", request);
 
-        Thread.sleep(200);
+        int random = new Random().nextInt(100);
+
+        log.info("Выпало число {}", random);
+
+        if (random < 30) {
+            log.error("Проблемы с отправкой информацией по заказу {}", request.orderId());
+            throw new RuntimeException("Возникли проблемы с отправкой информацией по заказу");
+        }
+
+        if (random > 70) {
+            log.warn("NotificationController замедлился");
+            Thread.sleep(400);
+        }
 
         return ResponseEntity.ok().build();
     }

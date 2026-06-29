@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import project.ivanov.orderservice.order.OrderStatus;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,4 +47,13 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
+    public BigDecimal getTotalPrice() {
+        if (items == null || items.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return items.stream()
+                .map(OrderItem::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 }

@@ -3,7 +3,9 @@ package project.ivanov.orderservice.order;
 import io.micrometer.observation.annotation.Observed;
 import io.opentelemetry.api.trace.Span;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import project.ivanov.orderservice.order.metrics.annotation.BusinessMetric;
 import project.ivanov.orderservice.order.repository.OrderRepository;
 
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +27,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    @SneakyThrows
     @Transactional
     @BusinessMetric(
             value = "orders.created",
@@ -31,6 +35,21 @@ public class OrderService {
     )
     @Observed(name = "order.creation", contextualName = "create-order")
     public Order createOrder(CreateOrderRequest request) {
+
+        int random = new Random().nextInt(100);
+
+        log.info("Выпало число {}", random);
+
+        if (random < 30) {
+            log.error("Проблемы с обработкой заказа {}", random);
+            throw new RuntimeException("Возникли проблемы с обработкой заказа");
+        }
+
+        if (random > 70) {
+            log.warn("OrderService замедлился");
+            Thread.sleep(300);
+        }
+
         log.info("Request to Create Order : {}", request);
         List<OrderItem> items = request.items().stream()
                 .map(item -> new OrderItem(
@@ -46,13 +65,28 @@ public class OrderService {
 
         log.info("Order ready to send id: {}", savedOrder.getId());
 
-        eventPublisher.publishEvent(OrderCreateEvent.of(savedOrder.getId()));
+        try {
+            MDC.put("order_id", savedOrder.getId().toString());
+            MDC.put("total_amount", savedOrder.getTotalPrice().toString());
+            MDC.put("order_status", savedOrder.getStatus().toString());
 
-        log.info("Successful to Create Order : {}", order);
 
-        Span.current().setAttribute("order.id", savedOrder.getId());
+            eventPublisher.publishEvent(
+                    OrderCreateEvent.of(
+                    savedOrder.getId(),
+                    MDC.getCopyOfContextMap())
+            );
 
-        return savedOrder;
+            log.info("Successful to Create Order : {}", order);
+
+            Span.current().setAttribute("order.id", savedOrder.getId());
+
+            return savedOrder;
+        } finally {
+            MDC.remove("order_id");
+            MDC.remove("total_amount");
+            MDC.remove("order_status");
+        }
     }
 
     @BusinessMetric(
