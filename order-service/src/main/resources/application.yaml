@@ -84,3 +84,62 @@ info:
 
 url:
   notification-service: ${NOTIFICATION_SERVICE_URL}
+  payment-service: ${PAYMENT_SERVICE_URL}
+
+resilience4j:
+  retry:
+    retryAspectOrder: 2
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 200ms
+        exponentialBackoffMultiplier: 2.0
+        exponentialMaxWaitDuration: 10s
+        randomizedWaitFactor: 0.3
+        retryExceptions:
+          - feign.FeignException
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - project.ivanov.orderservice.order.exception.PaymentFailedException
+
+          - io.netty.handler.timeout.ReadTimeoutException
+          - java.util.concurrent.TimeoutException
+        #          - java.lang.RuntimeException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+        failAfterMaxAttempts: true
+    instances:
+      paymentService:
+        baseConfig: default
+        maxAttempts: 4
+  circuitbreaker:
+    circuitBreakerAspectOrder: 1
+    configs:
+      default: # базовая конфигурация для всех экземпляров
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+    instances:
+      paymentService:
+        baseConfig: default            # наследуем всё из default
+        slidingWindowSize: 10          # переопределяем только размер окна
+        failureRateThreshold: 40        # и порог ошибок
+        minimumNumberOfCalls: 10        # после какого количества начинаем
+        recordExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - project.ivanov.orderservice.order.exception.PaymentFailedException
+
+          - io.netty.handler.timeout.ReadTimeoutException
+          - java.util.concurrent.TimeoutException
+          - io.github.resilience4j.bulkhead.BulkheadFullException
+        #          - java.lang.RuntimeException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+
+logging:
+  level:
+    root: INFO
+    project.ivanov.orderservice: DEBUG

@@ -1,4 +1,4 @@
-package project.ivanov.orderservice.order;
+package project.ivanov.orderservice.order.listener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

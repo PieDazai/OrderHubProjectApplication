@@ -6,7 +6,7 @@ import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import project.ivanov.orderservice.order.domain.NotificationRequest;
+import project.ivanov.orderservice.order.domain.dto.NotificationRequestDto;
 import project.ivanov.orderservice.order.domain.event.OrderCreateEvent;
 import java.util.Map;
 
@@ -36,7 +36,7 @@ public class NotificationClient {
                     MDC.get("total_amount")
             );
 
-            NotificationRequest request = NotificationRequest.builder()
+            NotificationRequestDto request = NotificationRequestDto.builder()
                     .orderId(orderId)
                     .eventType("CREATED")
                     .build();

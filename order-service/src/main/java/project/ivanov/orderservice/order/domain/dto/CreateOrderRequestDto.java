@@ -1,4 +1,4 @@
-package project.ivanov.orderservice.order;
+package project.ivanov.orderservice.order.domain.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.util.List;
 
-public record CreateOrderRequest(
+public record CreateOrderRequestDto(
 
         @Valid
         @NotEmpty(message = "items not be is empty")

@@ -1,4 +1,4 @@
-package project.ivanov.orderservice.order.domain;
+package project.ivanov.orderservice.order.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import project.ivanov.orderservice.order.CreateOrderRequest;
-import project.ivanov.orderservice.order.OrderResponse;
+import project.ivanov.orderservice.order.domain.dto.CreateOrderRequestDto;
+import project.ivanov.orderservice.order.domain.dto.OrderResponseDto;
 
 @RestController
 @RequiredArgsConstructor
@@ -18,11 +18,11 @@ public class OrderDemoController {
     private final DemoOrderService  demoOrderService;
 
     @PostMapping("/jdbc")
-    public ResponseEntity<OrderResponse> create(
-            @Valid @RequestBody CreateOrderRequest request
+    public ResponseEntity<OrderResponseDto> create(
+            @Valid @RequestBody CreateOrderRequestDto request
             ){
         var saved = demoOrderService.saveOrderWithJdbc(request);
-        var response = OrderResponse.from(saved);
+        var response = OrderResponseDto.from(saved);
 
         return ResponseEntity.ok(response);
     }

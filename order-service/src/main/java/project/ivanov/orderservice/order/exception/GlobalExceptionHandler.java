@@ -1,11 +1,10 @@
-package project.ivanov.orderservice.order;
+package project.ivanov.orderservice.order.exception;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import project.ivanov.orderservice.order.domain.ErrorDto;
-import project.ivanov.orderservice.order.exception.NotFoundOrderException;
+import project.ivanov.orderservice.order.domain.dto.ErrorDto;
 
 import java.util.List;
 
@@ -37,6 +36,24 @@ public class GlobalExceptionHandler {
                 ex.getMessage()
         );
         return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<ErrorDto> handleException(PaymentFailedException ex) {
+
+        ErrorDto error = new ErrorDto(500, "Ошибка приложения", ex.getMessage());
+
+        return ResponseEntity.internalServerError().body(error);
+
+    }
+
+    @ExceptionHandler(OrderCreationException.class)
+    public ResponseEntity<ErrorDto> handleException(OrderCreationException ex) {
+
+        ErrorDto error = new ErrorDto(500, "Ошибка оформления заказа", ex.getMessage());
+
+        return ResponseEntity.internalServerError().body(error);
+
     }
 
 }

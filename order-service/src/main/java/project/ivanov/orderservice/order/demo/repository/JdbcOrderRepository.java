@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import project.ivanov.orderservice.order.domain.Order;
 import project.ivanov.orderservice.order.domain.OrderItem;
-import project.ivanov.orderservice.order.OrderStatus;
+import project.ivanov.orderservice.order.dictionary.OrderStatus;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;

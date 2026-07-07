@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import project.ivanov.orderservice.order.OrderStatus;
+import project.ivanov.orderservice.order.dictionary.OrderStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;

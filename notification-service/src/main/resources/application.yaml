@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: notification-service
+
+  profiles:
+    active: elk
+
+server:
+  port: 8082
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0    # в демо берём 100%, в production меньше (0.1, 0.01)
+    propagation:
+      type: w3c           # W3C Trace Context, traceparent: содержит Trace ID, Span ID и флаги трассировки
+  otlp:
+    tracing:
+      endpoint: http://jaeger:4318/v1/traces
+  endpoints:
+    web:
+      exposure:
+        include:
+          - health
+          - metrics
+          - info
+          - prometheus
+          - loggers

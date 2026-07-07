@@ -7,14 +7,16 @@ filebeat.inputs:
 processors:
   - add_docker_metadata:
       host: "unix:///var/run/docker.sock"
-  - drop_event:
-      when:
-        not:
-          or:
-            - equals:
-                container.name: "order_service"
-            - equals:
-                container.name: "notification_service"
+#  - drop_event:
+#      when:
+#        not:
+#          or:
+#            - equals:
+#                container.name: "order_service"
+#            - equals:
+#                container.name: "notification_service"
+#            - equals:
+#                container.name: "payment_service"
 
   - decode_json_fields:
       fields: ["message"]

@@ -1,5 +1,6 @@
-package project.ivanov.orderservice.order;
+package project.ivanov.orderservice.order.domain.dto;
 
+import project.ivanov.orderservice.order.dictionary.OrderStatus;
 import project.ivanov.orderservice.order.domain.Order;
 import project.ivanov.orderservice.order.domain.OrderItem;
 
@@ -7,14 +8,14 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record OrderResponse(
+public record OrderResponseDto(
         Long id,
         OrderStatus status,
         Instant createdAt,
         List<OrderItemResponse> items,
         BigDecimal total
 ) {
-    public static OrderResponse from(Order order) {
+    public static OrderResponseDto from(Order order) {
         BigDecimal total = order.getItems().stream()
                 .map(i -> i.getPrice().multiply(BigDecimal.valueOf(i.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -23,7 +24,7 @@ public record OrderResponse(
                 .map(OrderItemResponse::from)
                 .toList();
 
-        return new OrderResponse(
+        return new OrderResponseDto(
                 order.getId(),
                 order.getStatus(),
                 order.getCreateAt(),
