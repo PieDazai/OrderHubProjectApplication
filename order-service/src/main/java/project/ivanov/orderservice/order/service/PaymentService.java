@@ -1,7 +1,10 @@
 package project.ivanov.orderservice.order.service;
 
+import feign.FeignException;
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.retry.RetryContext;
@@ -12,9 +15,13 @@ import org.springframework.retry.support.RetrySynchronizationManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import project.ivanov.orderservice.order.client.PaymentClient;
-import project.ivanov.orderservice.order.client.PaymentResponseDto;
+import project.ivanov.orderservice.order.domain.dto.PaymentResponseDto;
+import project.ivanov.orderservice.order.domain.dto.PaymentRequestDto;
 import project.ivanov.orderservice.order.domain.Order;
 import project.ivanov.orderservice.order.exception.PaymentFailedException;
+import project.ivanov.orderservice.order.feignclient.PaymentFeignClient;
+
+import java.util.concurrent.CompletableFuture;
 
 
 @Service
@@ -23,6 +30,7 @@ import project.ivanov.orderservice.order.exception.PaymentFailedException;
 public class PaymentService {
 
     private final PaymentClient paymentClient;
+    private final PaymentFeignClient paymentFeignClient;
 
     @Retryable(
             retryFor = {
@@ -40,7 +48,7 @@ public class PaymentService {
                     random = true
             )
     )
-    public PaymentResponseDto processPaymentDefault(Order order) {
+    public PaymentResponseDto processPaymentStandardSpring(Order order) {
         RetryContext context = RetrySynchronizationManager.getContext();
 
         int attempts = context != null ? context.getRetryCount() : 1;
@@ -65,36 +73,78 @@ public class PaymentService {
         }
     }
 
+
+    @Bulkhead(
+            name = "paymentService",
+            fallbackMethod = "fallbackBulkheadPayment"
+    )
+    @TimeLimiter(name = "paymentService")
     @CircuitBreaker(
             name = "paymentService",
             fallbackMethod = "fallbackPaymentProcess"
     )
     @Retry(name = "paymentService")
-    public PaymentResponseDto processPaymentResilience4j(Order order) {
+    public CompletableFuture<PaymentResponseDto> processPaymentResilience4j(Order order) {
 
+        return paymentClient.processPayment(order.getId(), order.getTotalPrice())
+                .toFuture()
+                .exceptionally( throwable -> {
+
+                    Throwable cause = throwable.getCause() != null ? throwable.getCause() : throwable;
+
+                    log.error("Техническая ошибка при вызове payment-service: {}", cause.getMessage());
+
+                    throw new PaymentFailedException("Payment service error: " + cause.getMessage());
+
+                });
+    }
+
+    @Bulkhead(
+            name = "paymentService",
+            fallbackMethod = "fallbackBulkheadPayment"
+    )
+    @CircuitBreaker(
+            name = "paymentService",
+            fallbackMethod = "fallbackPaymentProcess"
+    )
+    @Retry(name = "paymentService")
+    public PaymentResponseDto processPaymentFeign(Order savedOrder) {
         try {
-            PaymentResponseDto dto = paymentClient.processPayment(
-                    order.getId(),
-                    order.getTotalPrice()
-            ).block();
+            PaymentResponseDto response = paymentFeignClient.processPayment(
+                    new PaymentRequestDto(savedOrder.getId(), savedOrder.getTotalPrice())
+            );
 
-            log.info("PaymentService попытка успешна для заказа id: {}", order.getId());
+            log.debug("Успешно обработана оплата через feign-клиента. Ответ: {}", response);
 
-            return dto;
-        } catch (WebClientResponseException e) {
-            log.error("Техниическая ошибка в Payment серивсе {}", e.getMessage());
+            return response;
+
+        } catch (FeignException.FeignClientException e) {
+            log.error("Техническая ошибка при вызове payment-service через feign-клиента");
             throw new PaymentFailedException("Payment service error: " + e.getMessage());
         }
     }
 
     @Recover
-    public PaymentResponseDto fallbackPaymentProcess(Order order, Throwable t) {
+    public CompletableFuture<PaymentResponseDto> fallbackPaymentProcess(
+                Order order,
+                Throwable t
+            ) {
 
-        log.warn("Резервная логика для заказа {} после срабатвания Circuit Breaker: {}",
+        log.warn("Резервный вариант логики для заказа: {}, после срабатвания Circuit Breaker: {}",
                 order.getId(), t.getMessage());
 
-        throw new PaymentFailedException("Payment service error: " + t.getMessage());
+        throw new PaymentFailedException("Payment service временно недоступен: " + t.getMessage());
+    }
 
+    @Recover
+    public CompletableFuture<PaymentResponseDto> fallbackBulkheadPayment(
+            Order order,
+            Throwable t
+    ) {
 
+        log.warn("Сервис перегружен: {}, сработал Bulkhead для: {}",
+                t.getMessage(), order.getId());
+
+        throw new PaymentFailedException("Payment service временно недоступен: " + t.getMessage());
     }
 }

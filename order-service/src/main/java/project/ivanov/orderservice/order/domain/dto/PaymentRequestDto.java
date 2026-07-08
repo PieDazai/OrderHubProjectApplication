@@ -1,4 +1,4 @@
-package project.ivanov.orderservice.order.client;
+package project.ivanov.orderservice.order.domain.dto;
 
 import java.math.BigDecimal;
 

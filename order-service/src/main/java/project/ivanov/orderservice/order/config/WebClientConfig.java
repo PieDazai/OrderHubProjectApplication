@@ -27,4 +27,17 @@ public class WebClientConfig {
                 .baseUrl(paymentUrl)
                 .build();
     }
+
+//    @Bean
+//    public WebClient paymentWebClient(WebClient.Builder webClientBuilder) {
+//
+//        HttpClient httpClient = HttpClient.create()
+//                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
+//                .responseTimeout(Duration.ofSeconds(2));
+//
+//        return  webClientBuilder
+//                .clientConnector(new ReactorClientHttpConnector(httpClient))
+//                .baseUrl(paymentUrl)
+//                .build();
+//    }
 }

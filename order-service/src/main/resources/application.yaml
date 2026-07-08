@@ -131,14 +131,29 @@ resilience4j:
         recordExceptions:
           - org.springframework.web.reactive.function.client.WebClientResponseException
           - project.ivanov.orderservice.order.exception.PaymentFailedException
-
           - io.netty.handler.timeout.ReadTimeoutException
           - java.util.concurrent.TimeoutException
           - io.github.resilience4j.bulkhead.BulkheadFullException
         #          - java.lang.RuntimeException
         ignoreExceptions:
           - java.lang.IllegalArgumentException
-
+  timelimiter:
+    instances:
+      paymentService:
+        timeout-duration: 500ms
+        cancel-running-future: true
+  bulkhead:
+    configs:
+      default:
+        max-concurrent-calls: 10
+        max-wait-duration: 0
+        writable-stack-trace-enabled: true
+        event-consumer-buffer-size: 100
+    instances:
+      paymentService:
+          base-config: default
+          max-concurrent-calls: 5
+          max-wait-duration: 0
 logging:
   level:
     root: INFO

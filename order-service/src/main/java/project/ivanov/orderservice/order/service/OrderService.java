@@ -10,12 +10,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.ivanov.orderservice.order.domain.dto.CreateOrderRequestDto;
-import project.ivanov.orderservice.order.client.PaymentResponseDto;
+import project.ivanov.orderservice.order.domain.dto.PaymentResponseDto;
 import project.ivanov.orderservice.order.domain.OrderItem;
 import project.ivanov.orderservice.order.domain.Order;
 import project.ivanov.orderservice.order.domain.event.OrderCreateEvent;
 import project.ivanov.orderservice.order.exception.NotFoundOrderException;
 import project.ivanov.orderservice.order.exception.OrderCreationException;
+import project.ivanov.orderservice.order.exception.PaymentFailedException;
 import project.ivanov.orderservice.order.metrics.annotation.BusinessMetric;
 import project.ivanov.orderservice.order.repository.OrderRepository;
 
@@ -73,10 +74,14 @@ public class OrderService {
 
         Order savedOrder = orderRepository.saveAndFlush(order);
 
-        PaymentResponseDto dto = paymentService.processPaymentResilience4j(savedOrder);
+        //PaymentResponseDto response = paymentService.processPaymentFeign(savedOrder);
 
-        if (dto != null && !dto.isSuccessful()) {
-            log.warn("Бизнес ошибка оплаты: {}", dto.message());
+        PaymentResponseDto response = paymentService.processPaymentResilience4j(savedOrder).get();
+
+        if (response != null && !response.isSuccessful()) {
+            log.warn("Бизнес-ошибка оплаты: {}", response.message());
+
+            throw new PaymentFailedException("Payment failed: " + response.message());
         }
 
         log.info("Order ready to send id: {}", savedOrder.getId());
