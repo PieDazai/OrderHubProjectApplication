@@ -73,20 +73,17 @@ public class PaymentService {
         }
     }
 
-
-    @Bulkhead(
-            name = "paymentService",
-            fallbackMethod = "fallbackBulkheadPayment"
-    )
-    @TimeLimiter(name = "paymentService")
     @CircuitBreaker(
             name = "paymentService",
             fallbackMethod = "fallbackPaymentProcess"
     )
+    @TimeLimiter(name = "paymentService")
     @Retry(name = "paymentService")
+    @Bulkhead(name = "paymentService")
     public CompletableFuture<PaymentResponseDto> processPaymentResilience4j(Order order) {
 
-        return paymentClient.processPayment(order.getId(), order.getTotalPrice())
+        return paymentClient
+                .processPayment(order.getId(), order.getTotalPrice())
                 .toFuture()
                 .exceptionally( throwable -> {
 
@@ -99,15 +96,15 @@ public class PaymentService {
                 });
     }
 
-    @Bulkhead(
-            name = "paymentService",
-            fallbackMethod = "fallbackBulkheadPayment"
-    )
     @CircuitBreaker(
             name = "paymentService",
             fallbackMethod = "fallbackPaymentProcess"
     )
     @Retry(name = "paymentService")
+    @Bulkhead(
+            name = "paymentService",
+            fallbackMethod = "fallbackBulkheadPayment"
+    )
     public PaymentResponseDto processPaymentFeign(Order savedOrder) {
         try {
             PaymentResponseDto response = paymentFeignClient.processPayment(
@@ -124,27 +121,22 @@ public class PaymentService {
         }
     }
 
-    @Recover
     public CompletableFuture<PaymentResponseDto> fallbackPaymentProcess(
                 Order order,
                 Throwable t
             ) {
 
-        log.warn("Резервный вариант логики для заказа: {}, после срабатвания Circuit Breaker: {}",
-                order.getId(), t.getMessage());
+        log.warn("Fallback для заказа: {}, по причине: {}", order.getId(), t.getMessage());
 
-        throw new PaymentFailedException("Payment service временно недоступен: " + t.getMessage());
-    }
+        String message = t.getMessage();
 
-    @Recover
-    public CompletableFuture<PaymentResponseDto> fallbackBulkheadPayment(
-            Order order,
-            Throwable t
-    ) {
+        return CompletableFuture.completedFuture(
+                PaymentResponseDto.builder()
+                        .message(message)
+                        .requiresPendingProcessing(true)
+                        .isSuccessful(true)
+                        .build()
+        );
 
-        log.warn("Сервис перегружен: {}, сработал Bulkhead для: {}",
-                t.getMessage(), order.getId());
-
-        throw new PaymentFailedException("Payment service временно недоступен: " + t.getMessage());
-    }
+        }
 }
