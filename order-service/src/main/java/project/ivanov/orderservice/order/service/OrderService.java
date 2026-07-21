@@ -17,8 +17,8 @@ import project.ivanov.orderservice.order.domain.Order;
 import project.ivanov.orderservice.order.domain.event.OrderCreateEvent;
 import project.ivanov.orderservice.order.exception.NotFoundOrderException;
 import project.ivanov.orderservice.order.exception.OrderCreationException;
-import project.ivanov.orderservice.order.exception.PaymentFailedException;
 import project.ivanov.orderservice.order.metrics.annotation.BusinessMetric;
+import project.ivanov.orderservice.order.producer.NotificationProducer;
 import project.ivanov.orderservice.order.repository.OrderRepository;
 
 import java.util.List;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final ApplicationEventPublisher eventPublisher;
+    private final NotificationProducer notificationProducer;
     private final PaymentService  paymentService;
 
     private final AtomicBoolean failureMode = new AtomicBoolean(false);
@@ -94,7 +94,7 @@ public class OrderService {
 
                 log.info("Отправялем инфо о заказе: {}", savedOrder.getId());
 
-                eventPublisher.publishEvent(
+                notificationProducer.sendOrderNotification(
                         OrderCreateEvent.of(
                                 savedOrder.getId(),
                                 MDC.getCopyOfContextMap())

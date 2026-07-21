@@ -63,6 +63,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}           # Секрет!
 
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASS:-guest}
+
       # -----------------------------------------------------------------------
       # JPA настройки
       # -----------------------------------------------------------------------
@@ -93,6 +98,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy  # Ждём, пока PostgreSQL полностью готов
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
@@ -134,12 +141,19 @@ services:
       MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
       MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
 
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASS:-guest}
+
       SPRING_PROFILES_ACTIVE: elk
       ENVIRONMENT: production
 
     depends_on:
       postgres:
         condition: service_healthy  # Ждём, пока PostgreSQL полностью готов
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
@@ -350,6 +364,28 @@ services:
     networks:
       - orderhub-network
 
+
+  rabbitmq:
+    image: rabbitmq:4.2.5-management-alpine
+    container_name: rabbitmq_orderhub
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      orderhub-network:
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
 volumes:
   postgres_data:
     name: orderhub_postgres_data
@@ -363,6 +399,8 @@ volumes:
     name: orderhub_elasticsearch_data
   filebeat_data:
     name: orderhub_filebeat_data
+  rabbitmq_data:
+    name: orderhub_rabbitmq_data
 
 networks:
   orderhub-network:
