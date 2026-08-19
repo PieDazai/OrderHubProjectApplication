@@ -30,28 +30,6 @@ spring:
     password: ${POSTGRES_PASSWORD}
     change-log: classpath:/changelog/changelog_master.yaml
 
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST}
-    port: {SPRING_RABBITMQ_PORT}
-    username: {SPRING_RABBITMQ_USERNAME}
-    password: {SPRING_RABBITMQ_PASSWORD}
-    connection-timeout: 5s
-    requested-heartbeat: 30s
-
-    publisher-confirm-type: correlated
-    publisher-returns: true
-
-    template:
-      mandatory: true
-    listener:
-      direct:
-        retry:
-          enabled: true
-          initial-interval: 1s
-          max-attempts: 3
-          multiplier: 2.0
-          max-interval: 10s
-
   task:
     scheduling:
       pool:
@@ -59,6 +37,22 @@ spring:
       thread-name-prefix: "scheduled-"
       shutdown:
         await-termination: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      retries: 3
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      compression-type: gzip
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: true
+
+app:
+  topic:
+   order-create-topic: order.create
 
 server:
   port: 8080
@@ -71,7 +65,6 @@ management:
   otlp:
     tracing:
       endpoint: http://jaeger:4318/v1/traces
-
 
   prometheus:
     metrics:

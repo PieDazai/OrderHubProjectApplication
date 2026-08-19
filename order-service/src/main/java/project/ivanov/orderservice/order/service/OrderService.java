@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import project.ivanov.orderservice.order.dictionary.OrderStatus;
@@ -18,7 +19,8 @@ import project.ivanov.orderservice.order.domain.event.OrderCreateEvent;
 import project.ivanov.orderservice.order.exception.NotFoundOrderException;
 import project.ivanov.orderservice.order.exception.OrderCreationException;
 import project.ivanov.orderservice.order.metrics.annotation.BusinessMetric;
-import project.ivanov.orderservice.order.producer.NotificationProducer;
+//import project.ivanov.orderservice.order.producer.NotificationProducer;
+import project.ivanov.orderservice.order.producer.KafkaNotificationProducer;
 import project.ivanov.orderservice.order.repository.OrderRepository;
 
 import java.util.List;
@@ -31,8 +33,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final NotificationProducer notificationProducer;
+    //private final NotificationProducer notificationProducer;
     private final PaymentService  paymentService;
+    private final KafkaNotificationProducer kafkaNotificationProducer;
 
     private final AtomicBoolean failureMode = new AtomicBoolean(false);
     private final Random random = new Random();
@@ -94,7 +97,7 @@ public class OrderService {
 
                 log.info("Отправялем инфо о заказе: {}", savedOrder.getId());
 
-                notificationProducer.sendOrderNotification(
+                kafkaNotificationProducer.sendOrderCreateEvent(
                         OrderCreateEvent.of(
                                 savedOrder.getId(),
                                 MDC.getCopyOfContextMap())
@@ -114,9 +117,13 @@ public class OrderService {
 
             return savedOrder;
         } catch (Exception e) {
-            Throwable cause = e.getCause();
-            log.error("Ошибка при оплате заказа {}", cause.getMessage());
-            throw new OrderCreationException("Order created error: " + cause.getMessage());
+//            Throwable cause = e.getCause();
+//            log.error("Ошибка при оплате заказа {}", cause.getMessage());
+//            throw new OrderCreationException("Order created error: " + cause.getMessage());
+
+            String msg = e.getMessage() != null ? e.getMessage() : "Ошибка оплаты";
+            log.error("Ошибка при оплате заказа: {}", msg, e);
+            throw new OrderCreationException("Order created error: " + msg);
         } finally {
             MDC.remove("order_id");
             MDC.remove("total_amount");

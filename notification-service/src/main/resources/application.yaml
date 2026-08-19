@@ -5,14 +5,22 @@ spring:
   profiles:
     active: elk
 
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST}
-    port: ${SPRING_RABBITMQ_PORT}
-    username: ${SPRING_RABBITMQ_USERNAME}
-    password: ${SPRING_RABBITMQ_PASSWORD}
-    connection-timeout: 5s
-    requested-heartbeat: 30s
-
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      compression-type: gzip
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "order.create:project.ivanov.notificationservice.event.OrderCreatedEvent"
+        allow.auto.create.topics: false
     listener:
       simple:
         prefetch: 10
@@ -26,6 +34,11 @@ spring:
           max-attempts: 3
           multiplier: 2.0
           max-interval: 10s
+      missing-topics-fatal: false
+
+app:
+  topic:
+    order-create-topic: "order.create"
 
 server:
   port: 8082
